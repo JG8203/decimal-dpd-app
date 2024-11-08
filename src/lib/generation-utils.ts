@@ -8,18 +8,21 @@ function generateRandomNumber(): EncodedNumber {
         DecimalNumber: 0
     };
 
-    custom.DecimalNumber = Math.floor(Math.random() * (999 - 0 + 1) + 0);
+    custom.DecimalNumber = getRandomInt(5,9) * 100 + getRandomInt(5,9) * 10 + getRandomInt(5,9);
     custom.BCDNumber = decimalToBCD(custom.DecimalNumber)
     custom.DPDNumber = BCDToDPD(custom.BCDNumber)
     return custom;
 }
 
-export function generateQuestions(numQuestions: number): EncodedNumber[] {
+export function generateDPDQuestions(numQuestions: number): EncodedNumber[] {
     const questions: EncodedNumber[] = [];
     for (let i = 0; i < numQuestions; i++) {
         questions.push(generateRandomNumber());
     }
-    console.log("I was run!")
-    console.log(questions)
     return questions;
 }
+
+function getRandomInt(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+

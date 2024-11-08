@@ -1,25 +1,22 @@
 <script lang="ts">
 import { onMount } from 'svelte';
-import { generateQuestions } from "$lib/generation-utils";
+import { generateDPDQuestions } from "$lib/generation-utils";
 import type { EncodedNumber, Progress, Bit } from "$lib/types";
 import { currentDate, currentTime } from "$lib/utils";
 import { DPDToDecimal } from "$lib/conversion-utils";
 
-// State declarations
 let direction = $state(false);
 let questions: EncodedNumber[] = $state([]);
 let progress: Progress = $state({ correct: 0, incorrect: 0, currentQuestion: 0 });
 let userAnswer = $state("");
 let feedback = $state("");
-let timer = $state(30);
+let timer = $state(120);
 let isLoaded = $state(false);
 let date = $state(currentDate());
 let time = $state(currentTime());
 
-// Intervals
 let timerInterval: number;
 
-// Derived values
 let displayNumber = $derived(
     isLoaded ? 
         direction ?
@@ -28,7 +25,6 @@ let displayNumber = $derived(
         : ''
 );
 
-// Timer functions
 function formatTimer(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -36,7 +32,7 @@ function formatTimer(seconds: number): string {
 }
 
 function resetTimer() {
-    timer = 30;
+    timer = 120;
 }
 
 function startTimer() {
@@ -50,7 +46,6 @@ function startTimer() {
     }, 1000);
 }
 
-// Date and time functions
 function updateDate() {
     date = currentDate();
 }
@@ -59,7 +54,6 @@ function updateTime() {
     time = currentTime();
 }
 
-// Quiz navigation functions
 function skipQuestion() {
     if (progress.currentQuestion < questions.length - 1) {
         progress.currentQuestion += 1;
@@ -83,7 +77,6 @@ function nextQuestion() {
     }
 }
 
-// Answer handling
 function checkAnswer() {
     const currentQ = questions[progress.currentQuestion];
     let isCorrect = false;
@@ -98,7 +91,7 @@ function checkAnswer() {
 
         if (isValidInput) {
             isCorrect = JSON.stringify(userDPDBits) === JSON.stringify(currentQ.DPDNumber);
-        }
+        } 
     }
 
     if (isCorrect) {
@@ -116,23 +109,18 @@ function handleQuizCompletion() {
     feedback = `Quiz completed! You got ${progress.correct} out of ${questions.length} correct.`;
 }
 
-// Lifecycle
 onMount(() => {
-    // Initialize questions
-    questions = generateQuestions(100);
+    questions = generateDPDQuestions(10);
     isLoaded = true;
     
-    // Start timer
     startTimer();
     
-    // Initialize date/time updates
-    updateDate();  // Initial update
-    updateTime();  // Initial update
+    updateDate();
+    updateTime();
     
     const timeInterval = setInterval(updateTime, 1000);
     const dateInterval = setInterval(updateDate, 1000 * 60 * 60 * 24);
     
-    // Cleanup function
     return () => {
         clearInterval(timerInterval);
         clearInterval(timeInterval);
@@ -140,7 +128,6 @@ onMount(() => {
     };
 });
 
-// Auto-cleanup timer when component is destroyed
 $effect(() => {
     if (isLoaded) {
         startTimer();
@@ -148,278 +135,188 @@ $effect(() => {
     }
 });
 </script>
-
 <style>
-body {
-    margin: 0;
-    padding: 0;
-    background: #FFFFFF;
-    color: #000000;
-    font-family: Arial, Helvetica, sans-serif;
-}
+    body {
+        background: #EFEFEF;
+        color: #000000;
+        font-family: "MS PGothic", sans-serif;
+        margin: 0;
+        padding: 10px;
+    }
 
-.header-banner {
-    background: #DCFEC5 url("/api/placeholder/800/85") repeat-x;
-    border-bottom: 3px solid #FFFF00;
-    padding: 0;
-    height: 85px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-}
+    .quiz-container {
+        width: 800px;
+        margin: 0 auto;
+        background: #FFFFFF;
+        border: 2px solid #666666;
+    }
 
-.subanner {
-    background-color: #000000;
-    position: fixed;
-    z-index: 999;
-    width: 100%;
-}
+    .header-banner {
+        background: #006699;
+        color: #FFFFFF;
+        padding: 5px;
+        font-weight: bold;
+        font-size: 16px;
+        border-bottom: 2px solid #003366;
+    }
 
-.subanner-text {
-    color: #FFFFFF
-}
+    .info-box {
+        background: #FFEFEF;
+        border: 1px solid #FF9999;
+        padding: 8px;
+        margin: 5px;
+    }
 
-.header-title {
-    background-color: rgb(150,208,70);
-    font-size: 24px;
-    padding: 20px;
-    font-weight: bold;
-}
+    .question-box {
+        background: #E6FFE6;
+        border: 1px solid #66CC66;
+        padding: 10px;
+        margin: 5px;
+    }
 
-.timer {
-    float: right;
-    font-family: monospace;
-    background: #fff;
-    padding: 2px 8px;
-    border: 1px solid #029102;
-    margin: 20px;
-}
+    .number-display {
+        font-size: 24px;
+        font-weight: bold;
+        color: #CC0000;
+        background: #FFFFCC;
+        padding: 10px;
+        text-align: center;
+        margin: 10px 0;
+    }
 
-.sidebar {
-    position: fixed;
-    left: 0;
-    top: 88px;
-    bottom: 0;
-    width: 180px;
-    background: #FFFFFF;
-    border-right: 1px solid #CCCCCC;
-    padding: 0;
-    overflow-y: auto;
-}
+    input[type="text"] {
+        width: 200px;
+        padding: 5px;
+        border: 1px solid #999999;
+    }
 
-.menu {
-    padding: 5px 10px;
-    background: #F5F5F5;
-    border-bottom: 1px solid #CCCCCC;
-    color: #000000;
-    font-size: 12px;
-}
+    .button {
+        background: linear-gradient(to bottom, #FFFFFF, #CCCCCC);
+        border: 1px solid #999999;
+        padding: 3px 10px;
+        margin: 5px;
+        cursor: pointer;
+    }
 
-.menu b {
-    color: #029102;
-}
+    .stats-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+    }
 
-.main-content {
-    margin-left: 180px;
-    margin-top: 88px;
-    padding: 16px;
-    background: #FFFFFF;
-    min-height: calc(100vh - 88px);
-}
+    .stats-table td, .stats-table th {
+        border: 1px solid #999999;
+        padding: 5px;
+        background: #FFFFFF;
+    }
 
-.question-box {
-    background: #F5F5F5;
-    border: 1px solid #CCCCCC;
-    padding: 15px;
-    margin-bottom: 16px;
-}
+    .stats-table th {
+        background: #EEEEFF;
+    }
 
-.number-display {
-    font-size: 24px;
-    font-weight: bold;
-    text-align: center;
-    padding: 16px;
-    background: #FFFFFF;
-    border: 1px solid #029102;
-    margin: 8px 0;
-    color: #029102;
-}
+    .timer {
+        font-size: 18px;
+        color: #CC0000;
+        font-weight: bold;
+        text-align: center;
+        margin: 10px;
+    }
 
-.input-field {
-    width: calc(100% - 16px);
-    padding: 4px;
-    margin: 4px 0;
-    border: 1px solid #CCCCCC;
-    font-family: monospace;
-}
+    .feedback-correct {
+        color: #009900;
+        font-weight: bold;
+    }
 
-.button {
-    background: #029102;
-    border: 1px solid #027002;
-    padding: 4px 12px;
-    margin: 4px;
-    cursor: pointer;
-    color: #FFFFFF;
-}
+    .feedback-incorrect {
+        color: #CC0000;
+        font-weight: bold;
+    }
 
-.button:hover {
-    background: #027002;
-}
-
-.stats-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.stats-table td {
-    border: 1px solid #CCCCCC;
-    padding: 4px;
-    text-align: center;
-    background: #FFFFFF;
-}
-
-.stats-header {
-    background: #DCFEC5;
-    color: #029102;
-    font-weight: bold;
-}
-
-.mode-toggle {
-    background: #DCFEC5;
-    border: 1px solid #029102;
-    padding: 8px;
-    margin-bottom: 8px;
-}
-
-.sidebar-section {
-    background: #FFFFFF;
-    border: 1px solid #CCCCCC;
-    margin-bottom: 8px;
-    padding: 8px;
-}
-
-.sidebar-header {
-    background: #DCFEC5;
-    padding: 4px;
-    margin: -8px -8px 8px -8px;
-    border-bottom: 1px solid #029102;
-    color: #029102;
-    font-weight: bold;
-}
-
-.footer {
-    background: #029102;
-    color: #FFFFFF;
-    padding: 5px;
-    text-align: center;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    font-size: 12px;
-}
-
-.footer a {
-    color: #FFFFFF;
-    text-decoration: none;
-}
-
-.footer img {
-    vertical-align: middle;
-    margin: 0 5px;
-}
+    meter {
+        width: 100%;
+        height: 20px;
+    }
 </style>
 
-<div class="header-banner">
-    <div class="header-title">BCD Quiz Portal</div>
-    <div class="timer">{formatTimer(timer)}</div>
-</div>
+<div class="quiz-container">
+    <div class="header-banner">
+        ◆ Number Conversion Quiz System ◆
+    </div>
 
-<div class="sidebar">
-    <div class="menu"><b>QUIZ NAVIGATION</b></div>
-    <div class="menu"><a href="#">Start New Quiz</a></div>
-    <div class="menu"><a href="#">View History</a></div>
-    <div class="menu"><b>SETTINGS</b></div>
-    <div class="menu"><a href="#">Change Mode</a></div>
-    <div class="menu"><a href="#">Help</a></div>
-</div>
+    <div class="info-box">
+        ■ Current Date and Time: <b>{date}</b> ({time})
+    </div>
 
-<div class="main-content">
-    <p>Today is <b>{date}</b><br>
-    Current time is <b>{time}</b></p>
+    <div class="info-box">
+        ▼ Mode Selection:
+        {#if direction}
+        【DPD → Decimal】
+        {:else}
+        【Decimal → DPD】
+        {/if}
+        <label>
+            <input type="checkbox" bind:checked={direction} disabled={progress.currentQuestion > 0}> 
+            Toggle Conversion Direction
+        </label>
+    </div>
 
     <div class="question-box">
-        <div class="mode-toggle">
-            {#if direction}
-            Mode: DPD → Decimal
-            {:else}
-            Mode: Decimal → DPD
-            {/if}
-            
-            <label style="margin-left: 16px;">
-                <input type="checkbox" bind:checked={direction} disabled={progress.currentQuestion > 0 ? true : false}> Toggle direction
-            </label>
-        </div>
-        
-        <div style="font-weight: bold; margin: 8px 0; color: #029102;">
-            Convert this number:
-        </div>
-        
+        ▼ Question {progress.currentQuestion + 1}:
         <div class="number-display">
             {displayNumber}
         </div>
-        
-        <div style="margin-top: 8px;">
-            Your answer:
-            <input 
-                type="text" 
-                class="input-field" 
-                placeholder={direction ? 'Enter Decimal' : 'Enter DPD'} 
-                bind:value={userAnswer}
-            >
+
+        <div>
+            ▼ Answer Field:
+            <input type="text" 
+                placeholder={direction ? 'Enter Decimal' : 'Enter DPD Code'} 
+                bind:value={userAnswer}>
         </div>
-        
+
         {#if feedback}
-        <div style="text-align: center; margin-top: 8px; color: {feedback.includes('Correct') ? '#029102' : '#FF0000'}">
-            {feedback}
+        <div class={feedback === "Correct!" ? "feedback-correct" : "feedback-incorrect"}>
+            {feedback === "Correct!" ? "○ Correct!" : "× Incorrect. Try again or skip."}
         </div>
         {/if}
-        
-        <div style="text-align: center; margin-top: 12px;">
-            <button class="button" onclick={skipQuestion}>Skip</button>
-            <button class="button" onclick={checkAnswer}>Check Answer</button>
+
+        <div>
+            <button class="button" onclick={skipQuestion}>≫ Skip</button>
+            <button class="button" onclick={checkAnswer}>▶ Check Answer</button>
         </div>
     </div>
-    
-    <div class="sidebar-section" style="margin-top: 20px;">
-        <div class="sidebar-header">Statistics</div>
+
+    <div class="info-box">
+        ■ Statistics
         <table class="stats-table">
             <thead>
-                <tr>
-                    <td class="stats-header">Correct</td>
-                    <td class="stats-header">Incorrect</td>
-                </tr>
+            <tr>
+                <th>Correct</th>
+                <th>Incorrect</th>
+            </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>{progress.correct}</td>
-                    <td>{progress.incorrect}</td>
-                </tr>
-                <tr>
-                    <td class="stats-header" colspan="2">Progress</td>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <label for="progress_meter">Progress</label>
-                        <meter id="progress_meter" value={progress.currentQuestion + 1} min="0" max={questions.length}>
-                            {progress.currentQuestion + 1} out of {questions.length}
-                        </meter><br>
-                        Question: {progress.currentQuestion + 1}/{questions.length}
-                    </td>
-                </tr>            
-            </tbody>
+            <tr>
+                <td align="center">{progress.correct}</td>
+                <td align="center">{progress.incorrect}</td>
+            </tr>
+            <tr>
+                <th colspan="2">Progress</th>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <meter value={progress.currentQuestion + 1} min="0" max={questions.length}>
+                        {progress.currentQuestion + 1}/{questions.length}
+                    </meter>
+                    <div style="text-align: center;">
+                        {progress.currentQuestion + 1}/{questions.length} questions
+                    </div>
+                </td>
+            </tr>
+        </tbody>
         </table>
+    </div>
+
+    <div class="timer">
+        ⏱ Remaining Time: {formatTimer(timer)}
     </div>
 </div>
